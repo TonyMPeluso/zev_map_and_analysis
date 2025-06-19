@@ -1,0 +1,59 @@
+# ---------------------------------------------------------------------------- #
+# RStudio / R Specific Files
+# ---------------------------------------------------------------------------- #
+
+.Rproj.user/           # RStudio project-specific files (user settings, history)
+.Rhistory              # R console history
+.Rdata                 # R workspace image (where R saves objects by default)
+.Rprofile              # R startup file (unless specifically shared for proj config)
+.DS_Store              # macOS specific folder metadata
+
+# ---------------------------------------------------------------------------- #
+# renv Specific Files
+# ---------------------------------------------------------------------------- #
+
+# The 'library' folder contains the actual R packages.
+# These should NOT be committed to Git. renv.lock handles reproducibility.
+renv/library/
+
+# Staging area used by renv during operations
+renv/staging/
+
+# Local cache for renv (can be outside project, but often found here)
+renv/local/
+
+# renv's configuration file. Often project-specific local settings.
+renv/config.dcf
+
+# ---------------------------------------------------------------------------- #
+# Compiled R code / Markdown / Quarto Files
+# ---------------------------------------------------------------------------- #
+
+*.o                    # Compiled object files
+*.so                   # Shared object files
+*.dll                  # Dynamic link libraries (Windows)
+*.Rproj.user           # Individual project user settings (deprecated but catch)
+
+# knitr / R Markdown / Quarto generated files
+*.Rmd.html             # HTML output from R Markdown (commit if it's your main output, otherwise ignore)
+*.Rmd.md               # Markdown output from R Markdown
+*.qmd.html             # HTML output from Quarto
+*.qmd.pdf              # PDF output from Quarto
+*.qmd.docx             # Word output from Quarto
+*_files/               # Folders created by knitr/rmarkdown/quarto for figures/media
+*_cache/               # Cache directories for knitr/rmarkdown/quarto
+*.rds                  # R Data Serialization files (if they are generated and not source data)
+*.feather              # Feather files (if generated and not source data)
+*.parquet              # Parquet files (if generated and not source data)
+*.csv                  # CSV files (if generated and not source data)
+*.xlsx                 # Excel files (if generated and not source data)
+*.txt                  # Text files (if generated and not source data)
+
+# ---------------------------------------------------------------------------- #
+# Other Common Temporary / Output Files
+# ---------------------------------------------------------------------------- #
+
+/data_output/          # A common pattern for a directory where generated data goes
+/figures/              # A common pattern for a directory where generated plots go
+# Add other specific directories or file types you generate
+.Rproj.user

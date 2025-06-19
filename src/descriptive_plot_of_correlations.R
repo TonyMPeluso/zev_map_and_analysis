@@ -1,0 +1,123 @@
+#####################################################################
+### Read in census and ZEV data for descriptive analysis and plots
+#####################################################################
+
+# Load libraries
+library(here)
+library(caret)
+library(corrplot)
+library(glmnet)
+library(magrittr)
+library(sf)
+library(tidyverse)
+
+# Read and prepare census data
+census_df <- read_csv(here("data", "census_df.csv")) %>%
+  na.omit() %>%
+  mutate(CTUID = as.character(CTUID),
+         pop_density = Population / land_area,
+         shareSingleDwell = dwell_type_SingDet / dwell_type_Smpl,
+         shareBach = hh_educ_Bach / hh_educ_TotHighestDegreeSmpl,
+         shareAboveBach = hh_educ_AboveBach / hh_educ_TotHighestDegreeSmpl,
+         shareTravelDist_WithinCSD = traveL_dist_WithinCSDSmpl / travel_dist_TotDestSmpl,
+         shareTravelDist_WithinCD = (traveL_dist_WithinCSDSmpl + traveL_dist_DiffCSDSameCDSmpl) / travel_dist_TotDestSmpl,
+         shareTravelDist_WithinProv = (traveL_dist_WithinCSDSmpl + traveL_dist_DiffCSDSameCDSmpl + traveL_dist_DiffCSDDiffCDSmpl) / travel_dist_TotDestSmpl,
+         shareLDVCommute = traveL_mode_CarEtcDriverSmpl / traveL_mode_TotModeSmpl,
+         sharePublicTransCommute = traveL_mode_PublicTransSmpl / traveL_mode_TotModeSmpl,
+         shareTravelTime_Less15 = traveL_time_Less15Smpl / traveL_time_TotCommuteTimeSmpl,
+         shareTravelTime_Less29 = (traveL_time_Less15Smpl + traveL_time_15to29Smpl) / traveL_time_TotCommuteTimeSmpl,
+         shareTravelTime_Less45 = (traveL_time_Less15Smpl + traveL_time_15to29Smpl + traveL_time_30to44Smpl) / traveL_time_TotCommuteTimeSmpl,
+         shareTravelTime_Less59 = (traveL_time_Less15Smpl + traveL_time_15to29Smpl + traveL_time_30to44Smpl + traveL_time_45to59Smpl) / traveL_time_TotCommuteTimeSmpl)
+
+# Read and prepare ZEV fleet data
+fleet_df <- read_csv(here("data", "CT_ZEV_Fleet_ON.csv")) %>%
+  na.omit() %>%
+  select(-fuel_type_description) %>%
+  mutate(CTUID = sprintf("%.0f", as.numeric(CTUID)))  # Remove decimal places
+
+# Check and coerce value column to numeric if necessary
+if (class(fleet_df$value) != "numeric") {
+  fleet_df <- fleet_df %>%
+    mutate(value = as.numeric(value))
+  message("The 'value' column was coerced to numeric.")
+}
+
+# Aggregate the data so that each CTUID and fuel type combination is unique
+fleet_df <- fleet_df %>%
+  group_by(year, province, SAC_code, SAC_name, CTUID, fuel_type) %>%
+  summarise(value = sum(value, na.rm = TRUE), .groups = "drop")
+
+# Pivot the data to widen fuel types (fuel type will become separate columns)
+ZEV_df <- fleet_df %>%
+  filter(year == 2021) %>%
+  pivot_wider(
+    names_from = fuel_type,
+    values_from = value,
+    values_fill = list(value = 0)  # Fill missing values with 0 (instead of NA)
+  ) %>%
+  right_join(census_df, by = "CTUID") %>%
+  mutate(
+    ZEV_perHH = ZEV / Households,
+    pop_density_class = cut(
+      pop_density,
+      quantile(pop_density, probs = seq(0, 1, by = 1/3)),
+      include.lowest = TRUE,
+      labels = c("low density", "medium density", "high density")
+    )
+  )
+
+# Analysis dataset
+ZEV_data <- ZEV_df %>%
+  select(ZEV_perHH, hh_inc_MedIncHHAftTax, dwell_fin_MedValueOfDwellingSmpl, 
+         shareBach, shareAboveBach, shareSingleDwell, shareLDVCommute, 
+         sharePublicTransCommute, shareTravelTime_Less15, shareTravelTime_Less29, 
+         shareTravelDist_WithinCSD, shareTravelDist_WithinCD, pop_density, 
+         pop_density_class) %>%
+  na.omit()
+
+# Histogram
+hist(ZEV_data$ZEV_perHH, main = "Histogram of ZEVs per household", 
+     xlab = "ZEVs per household", breaks = 10)
+mean(ZEV_data$ZEV_perHH)
+
+# Correlation matrix
+corr_mat <- ZEV_data %>%
+  select(ZEV_perHH, hh_inc_MedIncHHAftTax, dwell_fin_MedValueOfDwellingSmpl, 
+         shareAboveBach, shareSingleDwell, sharePublicTransCommute, 
+         shareTravelTime_Less29, shareTravelDist_WithinCSD, pop_density)
+
+colnames(corr_mat) <- c("ZEV_perHH", "Median_Income", "Value_Dwelling", "Post-Bach_Edu",
+                        "Share_Single_Dwell", "Share_Public_Trans", "TravelTime_<29min",
+                        "TravelDist_Local", "Pop_Density")
+
+pairs(corr_mat)
+corrplot(cor(corr_mat), method = 'circle')
+corrplot(cor(corr_mat), method = 'ellipse')
+corrplot(cor(corr_mat), method = 'square')
+corrplot.mixed(cor(corr_mat), order = 'AOE')
+
+# Scatter plots with loess smoothing
+plot_vars <- list(
+  c("hh_inc_MedIncHHAftTax", "Median Household Income After Tax"),
+  c("shareLDVCommute", "Share of Commuters Using Light Duty Vehicle"),
+  c("shareTravelTime_Less15", "Share of Commuters with Travel Time Under 15 min."),
+  c("shareTravelTime_Less29", "Share of Commuters with Travel Time Under 29 min."),
+  c("shareTravelDist_WithinCSD", "Share Travelling within Census Sub-division"),
+  c("shareTravelDist_WithinCD", "Share Travelling within Census Division"),
+  c("pop_density", "Population Density (people/sq. km)")
+)
+
+for (v in plot_vars) {
+  ggplot(ZEV_df, aes_string(x = v[1], y = "ZEV_perHH")) +
+    geom_point() +
+    geom_smooth(method = "loess") +
+    labs(
+      title = paste("ZEVs per Household vs.", v[2], ", Ontario"),
+      subtitle = "By census tract, N=2356, ZEV data for 2021, census data for 2016",
+      x = v[2],
+      y = "Average ZEV per Household"
+    ) %>%
+    print()
+}
+
+
