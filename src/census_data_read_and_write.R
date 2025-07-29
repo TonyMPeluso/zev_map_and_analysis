@@ -10,7 +10,8 @@ library(geojsonio)
 library(here)
 
 # Set persistent API key and cache path (only do install = TRUE once)
-set_cancensus_api_key("CensusMapper_4157198e649c5a47d5759a6f6be9214a", install = TRUE)
+# User must obtain their own -- see https://mountainmath.github.io/cancensus/
+set_cancensus_api_key("CensusMapper_XXXXXXXXXXXX", install = TRUE)
 set_cancensus_cache_path(here("cache"), install = TRUE)
 
 # Define vector of variables and their labels
