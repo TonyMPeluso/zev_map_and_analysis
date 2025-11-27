@@ -4,3 +4,5 @@ Statistical analysis of Zero-Emission Vehicle (ZEV) correlates with census data 
 The analysis includes a lasso regression (in R) of ZEV ownership (per population) agains various household characteristics at the census tract level for Ontario, Canada.
 
 The interactive map uses R Shiny for its interactivity, showing registrations and registrations per capita at the census tract level, for Ontario, Canada.
+
+[The registration dashboard for Ontario can be viewed here: ]([URL](https://tonympeluso.shinyapps.io/ZEV_Registrations_Ontario/))
