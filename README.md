@@ -10,8 +10,7 @@ The analysis includes a lasso regression (in R) of ZEV ownership (per population
 * correlogram
 
 ![Correlation plot of explanatory variables](plots/correlation_plot.png)
-!ج
-!ج
+![Cross-validation of lasso regression](plots/lasso_cv_plot.png)
 
 ## Interactive map of registrations
 
