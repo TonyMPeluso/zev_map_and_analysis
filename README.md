@@ -8,6 +8,7 @@ The analysis includes a lasso regression (in R) of ZEV ownership (per population
 * box plots
 * density plots
 * correlogram
+* regression diagnostics
 
 ![Correlation plot of explanatory variables](plots/correlation_plot.png)
 ![Cross-validation of lasso regression](plots/lasso_cv_plot.png)
@@ -16,4 +17,4 @@ The analysis includes a lasso regression (in R) of ZEV ownership (per population
 
 The interactive map uses R Shiny for its interactivity, showing registrations and registrations per capita at the census tract level, for Ontario, Canada.
 
-[The registration dashboard for Ontario can be viewed here: ](https://tonympeluso.shinyapps.io/ZEV_Registrations_Ontario)
+[The registration dashboard for Ontario can be viewed here](https://tonympeluso.shinyapps.io/ZEV_Registrations_Ontario)
